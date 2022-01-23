@@ -5,5 +5,8 @@
   "main": "index.js",
   "author": "wtimme <wtimme@users.noreply.github.com>",
   "license": "MIT",
-  "private": false
+  "private": false,
+  "dependencies": {
+    "axios": "^0.25.0"
+  }
 }

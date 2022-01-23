@@ -1,0 +1,9 @@
+{
+  "name": "Freegal",
+  "version": "1.0.0",
+  "description": "Script for downloading free and legal music from Freegal",
+  "main": "index.js",
+  "author": "wtimme <wtimme@users.noreply.github.com>",
+  "license": "MIT",
+  "private": false
+}

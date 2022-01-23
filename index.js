@@ -14,7 +14,7 @@ const axios = require('axios').create({
   headers: { 'Authorization': 'Bearer ' + bearerToken }
 });
 
-const login = (username, password, libraryId) => {
+const getAuthenticationToken = (username, password, libraryId) => {
   return new Promise((resolve, reject) => {
     axios.post(`/login`, {
       identifier1: username,
@@ -22,7 +22,19 @@ const login = (username, password, libraryId) => {
       libraryId: libraryId
     })
     .then(function (response) {
-      console.log(response);
+      resolve(response.data.data.authenticationToken);
+    })
+    .catch(reject);
+  });
+};
+
+const getNumberOfAvailableDownloads = (authenticationToken) => {
+  return new Promise((resolve, reject) => {
+    axios.get('/user/details', {
+      headers: { 'authenticationToken': authenticationToken  }
+    })
+    .then(function (response) {
+      resolve(response.data.data.items.availabledownload);
     })
     .catch(function (error) {
       console.log(error);
@@ -30,6 +42,21 @@ const login = (username, password, libraryId) => {
   });
 };
 
-login(username, password, libraryId)
-  .then(data => console.log(data))
-  .catch(err => console.error(err));
+const downloadSongs = () => {
+  return new Promise((resolve, reject) => {
+    getAuthenticationToken(username, password, libraryId)
+    .then(getNumberOfAvailableDownloads)
+    .then(numberOfAvailableDownloads => {
+      if (numberOfAvailableDownloads == 0) {
+        reject("Maximum number of downloads reached.");
+        return;
+      }
+
+
+    })
+  });
+};
+
+downloadSongs()
+.then(result => { console.log(result); })
+.catch(err => console.error(err));

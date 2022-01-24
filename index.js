@@ -14,7 +14,7 @@ const axios = require('axios').create({
   headers: { 'Authorization': 'Bearer ' + bearerToken }
 });
 
-const getAuthenticationToken = (username, password, libraryId) => {
+const login = () => {
   return new Promise((resolve, reject) => {
     axios.post(`/login`, {
       identifier1: username,
@@ -22,41 +22,42 @@ const getAuthenticationToken = (username, password, libraryId) => {
       libraryId: libraryId
     })
     .then(function (response) {
-      resolve(response.data.data.authenticationToken);
+      if (response.data.success) {
+        let authenticationToken = response.data.data.authenticationToken
+        axios.defaults.headers.common['authenticationToken'] = authenticationToken;
+        resolve(authenticationToken);
+      } else {
+        reject(response.data.responseMessage);
+      }
     })
     .catch(reject);
   });
 };
 
-const getNumberOfAvailableDownloads = (authenticationToken) => {
+const getNumberOfAvailableDownloads = () => {
   return new Promise((resolve, reject) => {
-    axios.get('/user/details', {
-      headers: { 'authenticationToken': authenticationToken  }
-    })
+    axios.get('/user/details')
     .then(function (response) {
       resolve(response.data.data.items.availabledownload);
     })
-    .catch(function (error) {
-      console.log(error);
-    });
+    .catch(reject);
   });
 };
 
-const downloadSongs = () => {
+const ensureThatDownloadsAreAvailable = () => {
   return new Promise((resolve, reject) => {
-    getAuthenticationToken(username, password, libraryId)
-    .then(getNumberOfAvailableDownloads)
+    getNumberOfAvailableDownloads()
     .then(numberOfAvailableDownloads => {
       if (numberOfAvailableDownloads == 0) {
         reject("Maximum number of downloads reached.");
         return;
       }
-
-
-    })
+    
+      resolve();
+    }).catch(reject);
   });
 };
 
-downloadSongs()
-.then(result => { console.log(result); })
+login()
+.then(ensureThatDownloadsAreAvailable)
 .catch(err => console.error(err));

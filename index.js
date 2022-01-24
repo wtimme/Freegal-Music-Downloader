@@ -16,6 +16,8 @@ const axios = require('axios').create({
 
 const login = () => {
   return new Promise((resolve, reject) => {
+    console.log("Performing login");
+
     axios.post(`/login`, {
       identifier1: username,
       identifier2: password,
@@ -46,6 +48,8 @@ const getNumberOfAvailableDownloads = () => {
 
 const ensureThatDownloadsAreAvailable = () => {
   return new Promise((resolve, reject) => {
+    console.log("Making sure that downloads are available");
+    
     getNumberOfAvailableDownloads()
     .then(numberOfAvailableDownloads => {
       if (numberOfAvailableDownloads == 0) {
@@ -58,6 +62,21 @@ const ensureThatDownloadsAreAvailable = () => {
   });
 };
 
+const getDownloadedSongsIds = () => {
+  return new Promise((resolve, reject) => {
+    console.log("Retrieving the IDs of the songs that have already been downloaded");
+    
+    axios.get('/user/downloaded/songsIds')
+    .then(function (response) {
+      let songIds = response.data.data.songs.map(songObject => songObject.songId)
+
+      resolve(songIds);
+    })
+    .catch(reject);
+  });
+};
+
 login()
 .then(ensureThatDownloadsAreAvailable)
+.then(getDownloadedSongsIds)
 .catch(err => console.error(err));

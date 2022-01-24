@@ -5,7 +5,7 @@ const fs = require('fs');
 
 // Configuration
 let baseURL = 'https://api.freegalmusic.com/v1';
-let outputDirectory = './';
+let outputDirectory = './out';
 
 // Pass credentials via environment variables
 let username = process.env.USERNAME;
@@ -194,7 +194,7 @@ const downloadSongFromURL = (url) => {
     .then(function (response) {
       const filenameWithParameters = path.basename(url);
       const filename = filenameWithParameters.substring(0, filenameWithParameters.indexOf("?"));
-      let outputPath = outputDirectory + filename;
+      let outputPath = outputDirectory + '/' + filename;
 
       response.data.pipe(fs.createWriteStream(outputPath))
 

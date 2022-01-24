@@ -1,8 +1,11 @@
 require('dotenv').config();
-let parse = require('node-html-parser').parse;
+const parse = require('node-html-parser').parse;
+const path = require('path');
+const fs = require('fs');
 
 // Configuration
 let baseURL = 'https://api.freegalmusic.com/v1';
+let outputDirectory = './';
 
 // Pass credentials via environment variables
 let username = process.env.USERNAME;
@@ -145,10 +148,68 @@ const getSongsToDownload = () => {
   });
 };
 
+// - Adding the songs to the "library" so that they can be downloaded
+
+const getDownloadURL = (songId) => {
+  return new Promise((resolve, reject) => {
+    console.log("Getting download URL for song", songId);
+
+    axios.post(`/downloads/song`, {
+      songId: songId,
+      provider: 1
+    })
+    .then(function (response) {
+      let url = decodeURIComponent(response.data.data.downloadUrl);
+      console.log(url);
+
+      resolve(url);
+    })
+    .catch(reject);
+  });
+};
+
+const getDownloadURLs = (songIds) => {
+  let promises = songIds.map(id => getDownloadURL(id));
+
+  return Promise.all(promises);
+};
+
+// - Downloading the actual MP3 files
+
+const downloadSongs = (urls) => {
+  let promises = urls.map(url => downloadSongFromURL(url));
+
+  return Promise.all(promises);
+};
+
+const downloadSongFromURL = (url) => {
+  return new Promise((resolve, reject) => {
+    console.log("Downloading", url);
+    
+    axios({
+      method: 'get',
+      url: url,
+      responseType: 'stream'
+    })
+    .then(function (response) {
+      const filenameWithParameters = path.basename(url);
+      const filename = filenameWithParameters.substring(0, filenameWithParameters.indexOf("?"));
+      let outputPath = outputDirectory + filename;
+
+      response.data.pipe(fs.createWriteStream(outputPath))
+
+      resolve();
+    })
+    .catch(reject)
+    resolve();
+  });
+};
 
 setupBearerToken()
 .then(login)
 .then(ensureThatDownloadsAreAvailable)
 .then(getSongsToDownload)
-.then(result => console.log(result))
+.then(getDownloadURLs)
+.then(downloadSongs)
+.then(result => console.log("Downloads finished."))
 .catch(err => console.error(err));

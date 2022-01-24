@@ -8,10 +8,10 @@ let baseURL = 'https://api.freegalmusic.com/v1';
 let outputDirectory = './out';
 
 // Pass credentials via environment variables
-let username = process.env.USERNAME;
-let password = process.env.PASSWORD;
-let libraryId = process.env.LIBRARY_ID;
-let libraryHomepage = process.env.LIBRARY_HOMEPAGE;
+let username = process.env.FREEGAL_USERNAME;
+let password = process.env.FREEGAL_PASSWORD;
+let libraryId = process.env.FREEGAL_LIBRARY_ID;
+let libraryHomepage = process.env.FREEGAL_LIBRARY_HOMEPAGE;
 
 const axios = require('axios').create({ baseURL: baseURL });
 

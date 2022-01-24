@@ -128,9 +128,27 @@ const getSongsFromWishlistNotAlreadyDownloaded = () => {
   });
 };
 
+const getSongsToDownload = () => {
+  return new Promise((resolve, reject) => {
+    console.log("Determining the songs to download");
+    
+    getSongsFromWishlistNotAlreadyDownloaded()
+    .then(songIds => {
+      getNumberOfAvailableDownloads()
+      .then(numberOfAvailableDownloads => {
+        let songsToDownload = songIds.slice(0, numberOfAvailableDownloads);
+        resolve(songsToDownload);
+      })
+      .catch(reject);
+    })
+    .catch(reject);
+  });
+};
+
+
 setupBearerToken()
 .then(login)
 .then(ensureThatDownloadsAreAvailable)
-.then(getSongsFromWishlistNotAlreadyDownloaded)
+.then(getSongsToDownload)
 .then(result => console.log(result))
 .catch(err => console.error(err));

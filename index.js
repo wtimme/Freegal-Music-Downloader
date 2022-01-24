@@ -1,18 +1,35 @@
 require('dotenv').config();
+let parse = require('node-html-parser').parse;
 
 // Configuration
 let baseURL = 'https://api.freegalmusic.com/v1';
-let bearerToken = 'N2ZmNTNlZDRiN2FiNWRjN2EwOWY3MDkwYWVlZmE5YzkyZmRlNTA2OGRjYzIwMTlkMGUyMTFlZDE4YTg5ZDI3Ng';
 
 // Pass credentials via environment variables
 let username = process.env.USERNAME;
 let password = process.env.PASSWORD;
 let libraryId = process.env.LIBRARY_ID;
+let libraryHomepage = process.env.LIBRARY_HOMEPAGE;
 
-const axios = require('axios').create({
-  baseURL: baseURL,
-  headers: { 'Authorization': 'Bearer ' + bearerToken }
-});
+const axios = require('axios').create({ baseURL: baseURL });
+
+const setupBearerToken = () => {
+  return new Promise((resolve, reject) => {
+    console.log("Setting up the Bearer token");
+
+    axios.get(libraryHomepage + '/home')
+    .then(function(response) {
+      let root = parse(response.data);
+      let authTokenInputValue =  root.querySelector('#authToken').getAttribute('value');
+      let authTokenJSON = JSON.parse(authTokenInputValue);
+      let bearerToken = authTokenJSON.accessToken
+
+      axios.defaults.headers.common['Authorization'] = 'Bearer ' + bearerToken;
+      
+      resolve(bearerToken);
+    })
+    .catch(reject);
+  });
+};
 
 const login = () => {
   return new Promise((resolve, reject) => {
@@ -76,7 +93,44 @@ const getDownloadedSongsIds = () => {
   });
 };
 
-login()
+const getWishlist = () => {
+  return new Promise((resolve, reject) => {
+    console.log("Retrieving the wishlist");
+    
+    axios.get('/user/wishlist')
+    .then(function (response) {
+      let songIds = response.data.data.songs.map(songObject => songObject.songId)
+
+      resolve(songIds);
+    })
+    .catch(reject);
+  });
+};
+
+const getSongsFromWishlistNotAlreadyDownloaded = () => {
+  return new Promise((resolve, reject) => {
+    console.log("Determining the songs that have not yet been downloaded");
+    
+    getWishlist()
+    .then(songIds => {
+      getDownloadedSongsIds()
+      .then(downloadedSongsIds => {
+        console.log('Wishlist:', songIds);
+        console.log('Already downloaded:', downloadedSongsIds);
+
+        let notAlreadyDownloaded = songIds.filter(id => !downloadedSongsIds.includes(id))
+
+        resolve(notAlreadyDownloaded);
+      })
+      .catch(reject);
+    })
+    .catch(reject);
+  });
+};
+
+setupBearerToken()
+.then(login)
 .then(ensureThatDownloadsAreAvailable)
-.then(getDownloadedSongsIds)
+.then(getSongsFromWishlistNotAlreadyDownloaded)
+.then(result => console.log(result))
 .catch(err => console.error(err));

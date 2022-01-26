@@ -1,0 +1,391 @@
+openapi: 3.0.0
+info:
+  title: Freegal Music
+  description: Unofficial API for the Freegal Music site
+  version: 0.0.1
+servers:
+  - url: https://api.freegalmusic.com/v1
+    description: Production
+paths:
+  /login:
+    post:
+      summary: Performs a login
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                identifier1:
+                  type: string
+                  description: Username
+                  example: "john-doe"
+                identifier2:
+                  type: string
+                  description: Password
+                  example: "top-secret"
+                libraryId:
+                  type: number
+                  example: 1446
+      responses:
+        '200':
+          description: An object containing the authentication token.
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  responseCode:
+                    type: number
+                    example: 3
+                  responseMessage:
+                    type: string
+                    example: "Anmeldung erfolgreich."
+                  data:
+                    type: object
+                    properties:
+                      authenticationToken:
+                        type: string
+                        example: "510asdf6405as5df40as65df40asdf65asd4f0asdf"
+                    required:
+                      - authenticationToken
+                required:
+                  - success
+                  - responseCode
+                  - responseMessage
+      tags:
+        - Authentication
+  /user/details:
+    get:
+      summary: Provides details on the user
+      tags:
+        - User
+      parameters:
+        - name: 'authenticationToken'
+          type: string
+          in: header
+          required: true
+        - name: 'language'
+          type: string
+          in: query
+          example: "de"
+      responses:
+        '200':
+          description: Details on the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  responseCode:
+                    type: number
+                    example: 169
+                  responseMessage:
+                    type: string
+                    example: "Kundendetail"
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            downloadLimit:
+                              type: number
+                              example: 3
+                            availabledownload:
+                              type: number
+                              example: 1
+                          required:
+                            - downloadLimit
+                            - availabledownload
+                required:
+                  - success
+                  - responseCode
+                  - responseMessage
+  /user/downloaded/songsIds:
+    get:
+      operationId: getDownloadedSongIds
+      summary: Get the songs that the user has downloaded.
+      tags:
+        - User
+      parameters:
+        - name: 'authenticationToken'
+          type: string
+          in: header
+          required: true
+        - name: 'language'
+          type: string
+          in: query
+          example: "de"
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  responseCode:
+                    type: number
+                    example: 173
+                  responseMessage:
+                    type: string
+                    example: "Datenlisten download by patron."
+                  songs:
+                    type: object
+                    properties:
+                      songId:
+                        type: number
+                        example: 3204504
+                    required:
+                      - songId
+                required:
+                  - songs
+  /downloads/song:
+    post:
+      summary: Requests the download link for a single song.
+      tags:
+        - Download
+      operationId: downloadSong
+      parameters:
+        - name: 'authenticationToken'
+          type: string
+          in: header
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                songId:
+                  type: number
+                  example: 32206329
+                provider:
+                  type: number
+                  example: "1"
+              required:
+                - songId
+                - provider
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResponse'
+  /redownload/song:
+    post:
+      summary: Requests the download link for a song that has already been downloaded in the past.
+      tags:
+        - Download
+      operationId: downloadSong
+      parameters:
+        - name: 'authenticationToken'
+          type: string
+          in: header
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                songId:
+                  type: number
+                  example: 32206329
+                provider:
+                  type: number
+                  example: "1"
+              required:
+                - songId
+                - provider
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResponse'
+  /wishlist/songs:
+    get:
+      summary: Get the user's songs from their wishlist
+      operationId: getWishlist
+      parameters:
+        - name: 'authenticationToken'
+          type: string
+          in: header
+          required: true
+        - name: offset
+          type: number
+          in: query
+          example: 0
+        - name: limit
+          type: number
+          in: query
+          example: 20
+        - name: sortOrder
+          type: string
+          in: query
+          example: DESC
+        - name: language
+          type: string
+          in: query
+          example: de
+      responses:
+        '200':
+          description: Songs from the user's wishlist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  responseCode:
+                    type: number
+                    example: 3
+                  responseMessage:
+                    type: string
+                    example: "Liste von songs."
+                  data:
+                    type: object
+                    properties:
+                      songs:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            limit:
+                              type: number
+                              example: 20
+                            offset:
+                              type: number
+                              example: 0
+                            total:
+                              type: number
+                              example: 2
+                            items:
+                              $ref: '#/components/schemas/Song'
+                          required:
+                            - limit
+                            - offset
+                            - total
+                required:
+                  - success
+                  - responseCode
+                  - responseMessage
+      tags:
+        - Wishlist
+tags:
+  - name: Authentication
+  - name: Wishlist
+  - name: User
+  - name: Download
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: string
+  schemas:
+    Song:
+      type: object
+      properties:
+        songId:
+          type: number
+          example: 3204504
+        albumId:
+          type: number
+          example: 3204154
+        artist:
+          $ref: '#/components/schemas/Artist'
+        title:
+          type: string
+          example: "Final Countdown"
+        album:
+          $ref: '#/components/schemas/Album'
+        genre:
+          type: string
+          example: "Rock"
+        fullDurationSec:
+          type: number
+          example: 241
+        downloadStatus:
+          type: boolean
+          example: true
+        explicit:
+          type: boolean
+          example: false
+      required:
+        - songId
+        - albumId
+        - artist
+        - title
+        - album
+        - genre
+        - fullDurationSec
+        - downloadStatus
+        - explicit
+    Artist:
+      type: object
+      properties:
+        artistId:
+          type: string
+          example: "Vm540asdf4054s0df"
+        name:
+          type: string
+          example: "Europe"
+      required:
+        - artistId
+        - name
+    Album:
+      type: object
+      properties:
+        artist:
+          $ref: '#/components/schemas/Artist'
+        title:
+          type: string
+          example: "The Very Best Of"
+      required:
+        - artist
+    DownloadResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        responseCode:
+          type: number
+          example: 3
+        responseMessage:
+          type: string
+          example: "Details zum Herunterladen des Songs."
+        data:
+          type: object
+          properties:
+            downloadUrl:
+              type: string
+              example: "https://example.com/song.mp3"
+          required:
+            - downloadUrl
+      required:
+        - success
+        - responseCode
+        - responseMessage
+
+security:
+  - bearerAuth: []

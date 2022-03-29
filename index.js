@@ -159,6 +159,11 @@ const getDownloadURL = (songId) => {
       provider: 2
     })
     .then(function (response) {
+      if (!response.data.success) {
+        reject(response.data.responseMessage);
+        return;
+      }
+      
       let url = decodeURIComponent(response.data.data.downloadUrl);
       console.log(url);
 

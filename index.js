@@ -156,7 +156,7 @@ const getDownloadURL = (songId) => {
 
     axios.post(`/downloads/song`, {
       songId: songId,
-      provider: 1
+      provider: 2
     })
     .then(function (response) {
       let url = decodeURIComponent(response.data.data.downloadUrl);
